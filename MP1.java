@@ -2,6 +2,8 @@ import java.io.File;
 import java.lang.reflect.Array;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.nio.file.Files;
+import java.nio.charset.*;
 import java.util.*;
 
 public class MP1 {
@@ -51,8 +53,55 @@ public class MP1 {
 
     public String[] process() throws Exception {
         String[] ret = new String[20];
-       
-        //TODO
+        Map<String, Integer> words = new HashMap<>();
+
+        // Read all titles
+        List<String> titles = Files.readAllLines(new File(inputFileName).toPath(), Charset.defaultCharset());
+
+        // Now process selected indexes
+        for (Integer index : getIndexes()) {
+          String title = titles.get(index);
+          // Process title
+          StringTokenizer st = new StringTokenizer(title, delimiters);
+          while (st.hasMoreTokens()) {
+            // Process each word
+            String token = st.nextToken();
+            token = token.toLowerCase();
+            token = token.trim();
+            if (words.containsKey(token)) {
+              Integer count = words.get(token);
+              words.put(token, count+1);
+            } else {
+              words.put(token, 1);
+            }
+          }
+        }
+
+        // Ignore "stopWordsArray" words
+        for (String stopWord : stopWordsArray) {
+          words.remove(stopWord);
+        }
+
+        // Transform words to list
+        List<Map.Entry<String, Integer>> wordsList = new LinkedList<>(words.entrySet());
+
+        // Sort it
+        Collections.sort(wordsList, new Comparator<Map.Entry<String, Integer>>() {
+          public int compare(Map.Entry<String, Integer> e1, Map.Entry<String, Integer> e2) {
+            if (e1.getValue() == e2.getValue()) {
+              // Lexic
+              return e1.getKey().compareTo(e2.getKey());
+            } else {
+              // Count (bigger count first)
+              return e1.getValue() < e2.getValue() ? 1 : -1;
+            }
+          }
+        });
+
+        // Select top 20
+        for (int i=0; i<20 ; i++) {
+          ret[i] = wordsList.get(i).getKey();
+        }
 
         return ret;
     }
